@@ -1,9 +1,11 @@
 mod game;
+mod room;
 
 use game::{GGRSConfig, Game};
 use ggrs::{GgrsError, PlayerType, SessionBuilder, SessionState, UdpNonBlockingSocket};
 use instant::{Duration, Instant};
 use macroquad::prelude::*;
+use room::Room;
 use std::net::SocketAddr;
 use structopt::StructOpt;
 
@@ -33,6 +35,27 @@ struct Opt {
 
 #[macroquad::main(window_conf)]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    enter_room().await.unwrap();
+    enter_ggrs_session().await.unwrap();
+    Ok(())
+}
+
+async fn enter_room() -> Result<(), Box<dyn std::error::Error>> {
+    let room = Room {};
+    loop {
+        room.render();
+        if is_key_down(KeyCode::Enter) {
+            enter_ggrs_session().await.unwrap();
+        }
+        if is_key_down(KeyCode::Escape) {
+            break;
+        }
+        next_frame().await;
+    }
+    Ok(())
+}
+
+async fn enter_ggrs_session() -> Result<(), Box<dyn std::error::Error>> {
     // read cmd line arguments
     let opt = Opt::from_args();
     let num_players = opt.players.len();
@@ -42,7 +65,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut sess_build = SessionBuilder::<GGRSConfig>::new()
         .with_num_players(num_players)
         // (optional) exchange and validate state checksums
-        .with_desync_detection_mode(ggrs::DesyncDetection::On { interval: 100 })
+        //.with_desync_detection_mode(ggrs::DesyncDetection::On { interval: 100 })
         // (optional) set expected update frequency
         .with_fps(FPS as usize)?
         // (optional) set input delay for the local player
@@ -124,13 +147,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // render the game state
         game.render();
 
-        if is_key_down(KeyCode::Escape) {
+        if is_key_down(KeyCode::Q) {
             break;
         }
 
         // wait for the next loop (macroquad wants it so)
         next_frame().await;
     }
-
     Ok(())
 }
