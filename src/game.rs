@@ -43,8 +43,8 @@ fn fletcher16(data: &[u8]) -> u16 {
     let mut sum1: u16 = 0;
     let mut sum2: u16 = 0;
 
-    for index in 0..data.len() {
-        sum1 = (sum1 + data[index] as u16) % 255;
+    for i in data {
+        sum1 = (sum1 + *i as u16) % 255;
         sum2 = (sum2 + sum1) % 255;
     }
 
@@ -257,11 +257,11 @@ impl State {
         // increase the frame counter
         self.frame += 1;
 
-        for i in 0..self.num_players {
+        for (i, item) in inputs.iter().enumerate().take(self.num_players) {
             // get input of that player
-            let input = match inputs[i].1 {
-                InputStatus::Confirmed => inputs[i].0.inp,
-                InputStatus::Predicted => inputs[i].0.inp,
+            let input = match item.1 {
+                InputStatus::Confirmed => item.0.inp,
+                InputStatus::Predicted => item.0.inp,
                 InputStatus::Disconnected => 4, // disconnected players spin
             };
 
